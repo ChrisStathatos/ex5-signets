@@ -2,10 +2,42 @@ import './ListeDossiers.scss';
 import Dossier from './Dossier';
 import * as crudDossiers from '../services/crud-dossiers';
 import { useState, useEffect } from 'react';
+import { makeStyles } from '@material-ui/core/styles';
+import InputLabel from '@material-ui/core/InputLabel';
+import MenuItem from '@material-ui/core/MenuItem';
+import FormControl from '@material-ui/core/FormControl';
+import Select from '@material-ui/core/Select';
+import Button from '@material-ui/core/Button';
 
-export default function ListeDossiers({utilisateur, etatDossiers}) {
+const useStyles = makeStyles((theme) => ({
+  button: {
+    display: 'block',
+    marginTop: theme.spacing(2),
+  },
+  formControl: {
+    margin: theme.spacing(1),
+    minWidth: 120,
+  },
+}));
+
+export default function ListeDossiers({utilisateur, etatDossiers,etatTri}) {
   // État des dossiers (vient du composant Appli)
   const [dossiers, setDossiers] = etatDossiers;
+  const classes = useStyles();
+  const [tri, setTri] = etatTri;
+  const [ouvre, setOuvre] = useState(false);
+  const handleChange = (event) => {
+    setTri(event.target.value);
+    console.log(event.target.value)
+  };
+
+  const handleClose = () => {
+    setOuvre(false);
+  };
+
+  const handleOpen = () => {
+    setOuvre(true);
+  };
 
   // Lire les dossiers dans Firestore et forcer le réaffichage du composant
   // Remarquez que ce code est dans un useEffect() car on veut l'exécuter 
@@ -15,7 +47,7 @@ export default function ListeDossiers({utilisateur, etatDossiers}) {
   // forcé par la mutation de l'état des dossiers
   useEffect(
     () => {
-      crudDossiers.lireTout(utilisateur.uid).then(
+      crudDossiers.lireTout(utilisateur.uid,tri).then(
         dossiers => setDossiers(dossiers)
       )
     }, []
@@ -37,6 +69,22 @@ export default function ListeDossiers({utilisateur, etatDossiers}) {
   
   return (
     <>
+      <FormControl className={classes.formControl}>
+        <InputLabel id="triageId">trier</InputLabel>
+        <Select
+          labelId="triageId"
+          id="triage"
+          ouvre={ouvre}
+          onClose={handleClose}
+          onOpen={handleOpen}
+          value={tri}
+          onChange={handleChange}
+        >
+          <MenuItem value={1}>date de modification descendante</MenuItem>
+          <MenuItem value={2}>nom de dossier alphabétique ascendant</MenuItem>
+          <MenuItem value={3}>nom de dossier alphabétique descendant</MenuItem>
+        </Select>
+      </FormControl>
     <ul className="ListeDossiers">
       {
         (dossiers.length > 0) ?
